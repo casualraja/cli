@@ -164,23 +164,20 @@ var MailSend = common.Shortcut{
 			return fmt.Errorf("failed to build EML: %w", err)
 		}
 
-		draftID, err := draftpkg.CreateWithRaw(runtime, mailboxID, rawEML)
+		draftResult, err := draftpkg.CreateWithRaw(runtime, mailboxID, rawEML)
 		if err != nil {
 			return fmt.Errorf("failed to create draft: %w", err)
 		}
 		if !confirmSend {
-			runtime.Out(map[string]interface{}{
-				"draft_id": draftID,
-				"tip":      fmt.Sprintf(`draft saved. To send: lark-cli mail user_mailbox.drafts send --params '{"user_mailbox_id":"%s","draft_id":"%s"}'`, mailboxID, draftID),
-			}, nil)
-			hintSendDraft(runtime, mailboxID, draftID)
+			runtime.Out(buildDraftSavedOutput(draftResult, mailboxID), nil)
+			hintSendDraft(runtime, mailboxID, draftResult.DraftID)
 			return nil
 		}
-		resData, err := draftpkg.Send(runtime, mailboxID, draftID, sendTime)
+		resData, err := draftpkg.Send(runtime, mailboxID, draftResult.DraftID, sendTime)
 		if err != nil {
-			return fmt.Errorf("failed to send email (draft %s created but not sent): %w", draftID, err)
+			return fmt.Errorf("failed to send email (draft %s created but not sent): %w", draftResult.DraftID, err)
 		}
-		runtime.Out(buildSendResult(resData, mailboxID), nil)
+		runtime.Out(buildDraftSendOutput(resData, mailboxID), nil)
 		return nil
 	},
 }

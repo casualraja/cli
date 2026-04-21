@@ -119,18 +119,25 @@ var MailDraftEdit = common.Shortcut{
 		if err != nil {
 			return output.ErrValidation("serialize draft failed: %v", err)
 		}
-		if err := draftpkg.UpdateWithRaw(runtime, mailboxID, draftID, serialized); err != nil {
+		updateResult, err := draftpkg.UpdateWithRaw(runtime, mailboxID, draftID, serialized)
+		if err != nil {
 			return fmt.Errorf("update draft failed: %w", err)
 		}
 		projection := draftpkg.Project(snapshot)
 		out := map[string]interface{}{
-			"draft_id":   draftID,
+			"draft_id":   updateResult.DraftID,
 			"warning":    "This edit flow has no optimistic locking. If the same draft is changed concurrently, the last writer wins.",
 			"projection": projection,
 		}
+		if updateResult.Reference != "" {
+			out["reference"] = updateResult.Reference
+		}
 		runtime.OutFormat(out, nil, func(w io.Writer) {
 			fmt.Fprintln(w, "Draft updated.")
-			fmt.Fprintf(w, "draft_id: %s\n", draftID)
+			fmt.Fprintf(w, "draft_id: %s\n", updateResult.DraftID)
+			if reference, _ := out["reference"].(string); reference != "" {
+				fmt.Fprintf(w, "reference: %s\n", reference)
+			}
 			if projection.Subject != "" {
 				fmt.Fprintf(w, "subject: %s\n", sanitizeForTerminal(projection.Subject))
 			}

@@ -18,6 +18,11 @@ type DraftRaw struct {
 	RawEML  string
 }
 
+type DraftResult struct {
+	DraftID   string
+	Reference string
+}
+
 type Header struct {
 	Name  string
 	Value string
