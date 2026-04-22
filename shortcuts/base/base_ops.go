@@ -5,10 +5,13 @@ package base
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/larksuite/cli/shortcuts/common"
 )
+
+const baseCreateHint = "Tip: New bases include a default empty table with 5-10 blank records. After finishing table/field setup on this base, ask whether to delete that default table. If yes, run +table-list first, then delete the default table."
 
 func dryRunBaseGet(_ context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 	return common.NewDryRunAPI().
@@ -65,6 +68,7 @@ func executeBaseCreate(runtime *common.RuntimeContext) error {
 	out := map[string]interface{}{"base": data, "created": true}
 	augmentBasePermissionGrant(runtime, out, data)
 	runtime.Out(out, nil)
+	fmt.Fprintln(runtime.IO().ErrOut, baseCreateHint)
 	return nil
 }
 
